@@ -3,7 +3,18 @@
 <head>
   <title>바라보다 챗봇</title>
   <meta charset="utf-8">
+</head>
+<body>
+  <h1>무엇이든 물어보세요!</h1>
+  <div id="chatContainer"></div>
+  <div>
+    <input type="text" id="chatInput">
+    <button onclick="sendChatInput()">Send</button>
+  </div>
   <script>
+    // 대화 내역을 저장하는 변수입니다.
+    var conversation = [];
+
     function sendChatInput() {
       var chatInput = document.getElementById("chatInput").value;
       
@@ -16,18 +27,51 @@
       xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 && xhr.status == 200) {
           var response = JSON.parse(xhr.responseText).choices[0].text;
-          document.getElementById("chatOutput").innerHTML = response;
+          
+          // 대화 내역을 저장합니다.
+          conversation.push({"input": chatInput, "output": response});
+
+          // 직전에 사용자가 물은 질문을 가져옵니다.
+          var lastInput = conversation[conversation.length - 2]?.input;
+
+          // 대화 내역이 존재하는 경우, 뤼튼에서 사용자에게 받았던 질문 패턴을 파악하고
+          // 추가적인 질문을 던지는 방식으로 대화의 수준을 높일 수 있습니다.
+          if(lastInput){
+            var match = lastInput.match(/(해결|해야)/g);
+            if(match){
+              var followUpQuestion = "그렇다면 어떤 방식으로 해결하실 건가요?";
+              document.getElementById("chatOutput").innerHTML += '<div><span class="output">' + followUpQuestion + '</span></div>';
+            }
+          }
+          
+          // 대화 내역을 HTML 상에 출력합니다.
+          var chatContainer = document.getElementById("chatContainer");
+          chatContainer.innerHTML += '<div><span class="input">' + chatInput + '</span></div>';
+          chatContainer.innerHTML += '<div><span class="output">' + response + '</span></div>';
+          
+          document.getElementById("chatInput").value = "";
         }
       };
       xhr.send(params);
     }
   </script>
-</head>
-<body>
-  <h1>무엇이든 물어보세요!</h1>
-  <input type="text" id="chatInput">
-  <button onclick="sendChatInput()">입력</button>
-  <div id="chatOutput"></div>
+  <style>
+    #chatContainer{
+      border: 1px solid gray;
+      padding: 10px;
+      height: 100px;
+      overflow-y: scroll;
+    }
+    .input{
+      background-color: #F2F2F2;
+    }
+    .output{
+      font-weight: bold;
+    }
+  </style>
 </body>
 </html>
+
+
+
 
